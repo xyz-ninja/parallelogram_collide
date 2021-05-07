@@ -1,0 +1,110 @@
+[gd_scene load_steps=2 format=1]
+
+[sub_resource type="GDScript" id=1]
+
+script/source = "extends Node2D
+
+var parallelogram_points = {x = 0, x1 = 0, y = 0, y1 = 0}
+
+func _ready():
+	parallelogram_points.x = get_node(\"parallelogram_points/x\").get_global_pos()
+	parallelogram_points.x1 = get_node(\"parallelogram_points/x1\").get_global_pos()
+	parallelogram_points.y = get_node(\"parallelogram_points/y\").get_global_pos()
+	parallelogram_points.y1 = get_node(\"parallelogram_points/y1\").get_global_pos()
+	
+	set_process(true)
+	
+func _process(delta):
+	if is_pos_inside_parallelogram(get_global_mouse_pos(), parallelogram_points):
+		get_node(\"text\").set_text(\"MOUSE INSIDE PARALLELOGRAM!!!\")
+	else:
+		get_node(\"text\").set_text(\"MOUSE NOT INSIDE PARALLELOGRAM!\")
+	
+func _draw():
+	var points = parallelogram_points
+	
+	draw_line(points.x, points.x1, Color(255, 0, 0), 2)
+	draw_line(points.x1, points.y1, Color(255, 0, 0),2)
+	draw_line(points.y1, points.y, Color(255, 0, 0), 2)
+	draw_line(points.y, points.x, Color(255, 0, 0), 2)
+
+
+func is_pos_inside_parallelogram(_v2_pos, _points):
+	# разложим параллелограмм на два треугольника
+	var tr1_a = _points.x
+	var tr1_b = _points.x1
+	var tr1_c = _points.y
+	 
+	var tr2_a = _points.x1
+	var tr2_b = _points.y1
+	var tr2_c = _points.y
+	
+	if is_pos_inside_triangle(_v2_pos, tr1_a, tr1_b, tr1_c) or is_pos_inside_triangle(_v2_pos, tr2_a, tr2_b, tr2_c):
+		return true
+	else:
+		return false
+	
+func is_pos_inside_triangle(_v2_pos, _tr_a, _tr_b, _tr_c):
+	var cur_pos = _v2_pos # анализируемая позиция
+	
+	# точки треугольника
+	var tr_a = _tr_a
+	var tr_b = _tr_b
+	var tr_c = _tr_c
+	# по формуле скалярного произведение можно проверить принадлежность точки
+	# (x1-x0)*(y2-y1)-(x2-x1)*(y1-y0)
+	# (x2-x0)*(y3-y2)-(x3-x2)*(y2-y0)
+	# (x3-x0)*(y1-y3)-(x1-x3)*(y3-y0)
+	
+	var v1 = (tr_a.x - cur_pos.x)*(tr_b.y - tr_a.y)-(tr_b.x - tr_a.x)*(tr_a.y - cur_pos.y)
+	var v2 = (tr_b.x - cur_pos.x)*(tr_c.y - tr_b.y)-(tr_c.x - tr_b.x)*(tr_b.y - cur_pos.y)
+	var v3 = (tr_c.x - cur_pos.x)*(tr_a.y - tr_c.y)-(tr_a.x - tr_c.x)*(tr_c.y - cur_pos.y)
+	
+	#Если они одинакового знака, то точка внутри треугольника, 
+	#если что-то из этого - ноль, то точка лежит на стороне, иначе точка вне треугольника.
+	
+	if v1 > 0 and v2 > 0 and v3 > 0 or v1 < 0 and v2 < 0 and v3 < 0:
+		return true
+	elif v1 == 0 or v2 == 0 or v3 == 0:
+		return true
+	else:
+		return false"
+
+[node name="demo" type="Node2D"]
+
+script/script = SubResource( 1 )
+
+[node name="parallelogram_points" type="Node2D" parent="."]
+
+[node name="x" type="Position2D" parent="parallelogram_points"]
+
+transform/pos = Vector2( 113.715, 124.545 )
+
+[node name="x1" type="Position2D" parent="parallelogram_points"]
+
+transform/pos = Vector2( 443.715, 124.545 )
+
+[node name="y" type="Position2D" parent="parallelogram_points"]
+
+transform/pos = Vector2( 263.715, 294.545 )
+
+[node name="y1" type="Position2D" parent="parallelogram_points"]
+
+transform/pos = Vector2( 593.715, 294.545 )
+
+[node name="text" type="Label" parent="."]
+
+focus/ignore_mouse = true
+focus/stop_mouse = true
+size_flags/horizontal = 2
+size_flags/vertical = 0
+margin/left = 232.0
+margin/top = 361.0
+margin/right = 475.0
+margin/bottom = 375.0
+text = "MOUSE NOT INSIDE PARALLELOGRAM"
+percent_visible = 1.0
+lines_skipped = 0
+max_lines_visible = -1
+
+
